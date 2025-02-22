@@ -1,10 +1,9 @@
-name: Build All Targets
+name: Build & Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
 
 jobs:
   build:
@@ -22,6 +21,8 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-gnu
     runs-on: ${{ matrix.os }}
+    outputs:
+      asset-path: ${{ steps.package.outputs.asset-path }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,15 +34,67 @@ jobs:
           target: ${{ matrix.target }}
           override: true
 
-      # Optionally install any extra dependencies needed for cross-compiling
       - name: Install extra dependencies on Ubuntu
         if: runner.os == 'Linux'
         run: |
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu;
+            sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+            # Ensure that the cross-compiler is used by setting CC
+            echo "export CC=aarch64-linux-gnu-gcc" >> $BASH_ENV
           fi
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      # Optionally, you can add steps to run tests or package artifacts
+      - name: Package Binary
+        id: package
+        run: |
+          BIN_DIR=target/${{ matrix.target }}/release
+          BIN_NAME=$(basename $(find $BIN_DIR -maxdepth 1 -type f -executable))
+          mkdir -p release
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            cp "$BIN_DIR/$BIN_NAME.exe" "release/${BIN_NAME}-${{ matrix.target }}.exe"
+            zip -j "release/${BIN_NAME}-${{ matrix.target }}.zip" "release/${BIN_NAME}-${{ matrix.target }}.exe"
+            echo "release/${BIN_NAME}-${{ matrix.target }}.zip" >> asset.txt
+          else
+            cp "$BIN_DIR/$BIN_NAME" "release/${BIN_NAME}-${{ matrix.target }}"
+            tar -czf "release/${BIN_NAME}-${{ matrix.target }}.tar.gz" -C release "$(basename release/${BIN_NAME}-${{ matrix.target }})"
+            echo "release/${BIN_NAME}-${{ matrix.target }}.tar.gz" >> asset.txt
+          fi
+          # Output the asset path for later jobs (assuming a single asset per job)
+          ASSET_PATH=$(cat asset.txt)
+          echo "Asset path: $ASSET_PATH"
+          echo "::set-output name=asset-path::$ASSET_PATH"
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: asset-${{ matrix.target }}
+          path: ${{ steps.package.outputs.asset-path }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release ${{ github.ref }}
+          body: "Automatically generated release for ${{ github.ref }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts
+          asset_name: ${{ github.ref }}-assets.zip
+          asset_content_type: application/zip
