@@ -2,6 +2,7 @@ name: Build & Release
 
 on:
   push:
+    branches: [ main ]
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
 
@@ -12,8 +13,6 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
           - os: macos-latest
             target: x86_64-apple-darwin
           - os: macos-latest
@@ -39,8 +38,6 @@ jobs:
         run: |
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
-            # Ensure that the cross-compiler is used by setting CC
-            echo "export CC=aarch64-linux-gnu-gcc" >> $BASH_ENV
           fi
 
       - name: Build
