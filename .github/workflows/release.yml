@@ -1,4 +1,4 @@
-name: Build & Release
+name: Code2prompt Release
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         id: package
         run: |
           BIN_DIR=target/${{ matrix.target }}/release
-          BIN_NAME=$(basename $(find $BIN_DIR -maxdepth 1 -type f -executable))
+          BIN_NAME=code2prompt
           mkdir -p release
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
             cp "$BIN_DIR/$BIN_NAME.exe" "release/${BIN_NAME}-${{ matrix.target }}.exe"
