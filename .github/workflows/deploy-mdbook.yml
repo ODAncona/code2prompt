@@ -1,4 +1,5 @@
-name: Deploy mdBook to GitHub Pages
+# Deploy documentation mdBook to GitHub Pages
+name: Code2prompt Documentation 
 
 on:
   push:
