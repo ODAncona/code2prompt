@@ -237,7 +237,8 @@ fn process_single_file(file_info: &FileToProcess, config: &Code2PromptConfig) ->
 
     // Get appropriate processor for file extension
     let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-    let processor = file_processor::get_processor_for_extension(extension);
+    let processor =
+        file_processor::get_processor_for_extension(extension, &config.processors);
 
     // Process file content
     let code = match processor.process(clean_bytes, path) {

@@ -202,7 +202,7 @@ mod ipynb_tests {
 
     #[test]
     fn test_ipynb_with_code_cells() {
-        let processor = JupyterNotebookProcessor;
+        let processor = JupyterNotebookProcessor::default();
         let content = r##"{
             "cells": [
                 {
@@ -230,11 +230,12 @@ mod ipynb_tests {
         assert!(result.contains("import pandas as pd"));
         assert!(result.contains("Code Cell #2:"));
         assert!(result.contains("df.head()"));
+        assert!(!result.contains("Markdown Cell"));
     }
 
     #[test]
     fn test_ipynb_with_many_code_cells() {
-        let processor = JupyterNotebookProcessor;
+        let processor = JupyterNotebookProcessor::default();
         let content = r#"{
             "cells": [
                 {"cell_type": "code", "source": "cell1"},
@@ -258,8 +259,80 @@ mod ipynb_tests {
     }
 
     #[test]
+    fn test_ipynb_custom_max_code_cells() {
+        let processor = JupyterNotebookProcessor::new(IpynbProcessorConfig {
+            max_code_cells: 5,
+            ..IpynbProcessorConfig::default()
+        });
+        let content = r#"{
+            "cells": [
+                {"cell_type": "code", "source": "cell1"},
+                {"cell_type": "code", "source": "cell2"},
+                {"cell_type": "code", "source": "cell3"},
+                {"cell_type": "code", "source": "cell4"},
+                {"cell_type": "code", "source": "cell5"}
+            ]
+        }"#;
+
+        let result = processor
+            .process(content.as_bytes(), &PathBuf::from("test.ipynb"))
+            .unwrap();
+
+        assert!(result.contains("Code Cell #5:"));
+        assert!(!result.contains("omitted"));
+    }
+
+    #[test]
+    fn test_ipynb_include_outputs() {
+        let processor = JupyterNotebookProcessor::new(IpynbProcessorConfig {
+            include_outputs: true,
+            ..IpynbProcessorConfig::default()
+        });
+        let content = r#"{
+            "cells": [
+                {
+                    "cell_type": "code",
+                    "source": "print('hi')",
+                    "outputs": [
+                        {"output_type": "stream", "name": "stdout", "text": ["hi\n"]}
+                    ]
+                }
+            ]
+        }"#;
+
+        let result = processor
+            .process(content.as_bytes(), &PathBuf::from("test.ipynb"))
+            .unwrap();
+
+        assert!(result.contains("Output:"));
+        assert!(result.contains("hi"));
+    }
+
+    #[test]
+    fn test_ipynb_include_markdown() {
+        let processor = JupyterNotebookProcessor::new(IpynbProcessorConfig {
+            include_markdown: true,
+            ..IpynbProcessorConfig::default()
+        });
+        let content = r##"{
+            "cells": [
+                {"cell_type": "markdown", "source": "# Title"},
+                {"cell_type": "code", "source": "x = 1"}
+            ]
+        }"##;
+
+        let result = processor
+            .process(content.as_bytes(), &PathBuf::from("test.ipynb"))
+            .unwrap();
+
+        assert!(result.contains("Markdown Cell #1:"));
+        assert!(result.contains("# Title"));
+        assert!(result.contains("Code Cell #1:"));
+    }
+
+    #[test]
     fn test_ipynb_no_code_cells() {
-        let processor = JupyterNotebookProcessor;
+        let processor = JupyterNotebookProcessor::default();
         let content = r##"{
             "cells": [
                 {"cell_type": "markdown", "source": "# Title"},
@@ -277,7 +350,7 @@ mod ipynb_tests {
 
     #[test]
     fn test_ipynb_invalid_json() {
-        let processor = JupyterNotebookProcessor;
+        let processor = JupyterNotebookProcessor::default();
         let content = b"not a valid json";
 
         let result = processor.process(content, &PathBuf::from("test.ipynb"));
@@ -286,7 +359,7 @@ mod ipynb_tests {
 
     #[test]
     fn test_ipynb_with_fallback() {
-        let processor = JupyterNotebookProcessor;
+        let processor = JupyterNotebookProcessor::default();
         let content = b"invalid notebook content";
 
         let result = processor
