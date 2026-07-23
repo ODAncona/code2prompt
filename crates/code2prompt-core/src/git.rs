@@ -8,7 +8,8 @@
 use anyhow::{Context, Result};
 use git2::{DiffOptions, Repository};
 use log::info;
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 /// Extract git diff for staged changes in repository.
 /// 
@@ -133,6 +134,68 @@ pub fn get_git_diff_between_branches(
 
     info!("Generated git diff between branches successfully");
     Ok(String::from_utf8_lossy(&diff_text).into_owned())
+}
+
+/// Computes the set of relative file paths that changed between two branches.
+///
+/// This performs the same tree-to-tree diff as [`get_git_diff_between_branches`],
+/// but instead of rendering a textual patch it collects the paths touched by
+/// each delta (both sides, so a rename contributes its old and new path).
+/// This set is used to prune the source tree and file content down to only
+/// the files that actually changed when `--git-diff-branch` is active.
+///
+/// # Arguments
+///
+/// * `repo_path` - A reference to the path of the git repository
+/// * `branch1` - The name of the first branch
+/// * `branch2` - The name of the second branch
+///
+/// # Returns
+///
+/// * `Result<HashSet<PathBuf>>` - The relative paths that changed between the two branches
+pub fn get_git_diff_file_paths(
+    repo_path: &Path,
+    branch1: &str,
+    branch2: &str,
+) -> Result<HashSet<PathBuf>> {
+    info!("Opening repository at path: {:?}", repo_path);
+    let repo = Repository::open(repo_path).context("Failed to open repository")?;
+
+    for branch in [branch1, branch2].iter() {
+        if !branch_exists(&repo, branch) {
+            return Err(anyhow::anyhow!("Branch {} doesn't exist!", branch));
+        }
+    }
+
+    let branch1_commit = repo.revparse_single(branch1)?.peel_to_commit()?;
+    let branch2_commit = repo.revparse_single(branch2)?.peel_to_commit()?;
+
+    let branch1_tree = branch1_commit.tree()?;
+    let branch2_tree = branch2_commit.tree()?;
+
+    let diff = repo
+        .diff_tree_to_tree(
+            Some(&branch1_tree),
+            Some(&branch2_tree),
+            Some(DiffOptions::new().ignore_whitespace(true)),
+        )
+        .context("Failed to generate diff between branches")?;
+
+    let mut paths = HashSet::new();
+    for delta in diff.deltas() {
+        if let Some(path) = delta.old_file().path() {
+            paths.insert(path.to_path_buf());
+        }
+        if let Some(path) = delta.new_file().path() {
+            paths.insert(path.to_path_buf());
+        }
+    }
+
+    info!(
+        "Collected {} changed file path(s) between branches",
+        paths.len()
+    );
+    Ok(paths)
 }
 
 /// Retrieves the git log between two branches for the repository at the provided path
