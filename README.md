@@ -126,7 +126,7 @@ cargo install --path crates/code2prompt
 
 ## ⭐ Star Gazing
 
-[![Star History Chart](https://api.star-history.com/svg?repos=mufeedvh/code2prompt&type=Date)](https://star-history.com/#mufeedvh/code2prompt&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=mufeedvh/code2prompt&type=Date)](https://star-history.dera.page/#mufeedvh/code2prompt&Date)
 
 ## 📜 License
 
