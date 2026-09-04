@@ -7,7 +7,7 @@ use crate::tokenizer::TokenizerType;
 use crate::{sort::FileSortMethod, tokenizer::TokenFormat};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 /// Configuration object defining preferences and filters for code prompt generation.
@@ -96,6 +96,13 @@ pub struct Code2PromptConfig {
 
     /// If set, contains two branch names for which code2prompt will generate a git diff.
     pub diff_branches: Option<(String, String)>,
+
+    /// Populated internally from `diff_branches` before traversal: the set of
+    /// relative file paths that changed between the two branches. When
+    /// present, `discover_files` prunes both the source tree and the
+    /// collected file content down to just these paths, mirroring how
+    /// `include_patterns` filters both. Not user-configurable directly.
+    pub diff_files: Option<HashSet<PathBuf>>,
 
     /// If set, contains two branch names for which code2prompt will retrieve the git log.
     pub log_branches: Option<(String, String)>,

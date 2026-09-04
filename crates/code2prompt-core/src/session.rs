@@ -10,7 +10,9 @@ use std::sync::Arc;
 use crate::analysis::CodebaseAnalysis;
 use crate::configuration::Code2PromptConfig;
 use crate::entity_map::FileCodeMap;
-use crate::git::{get_git_diff, get_git_diff_between_branches, get_git_log};
+use crate::git::{
+    get_git_diff, get_git_diff_between_branches, get_git_diff_file_paths, get_git_log,
+};
 use crate::path::{FileEntry, display_name, traverse_directory, wrap_code_block};
 use crate::selection::SelectionEngine;
 use crate::template::{OutputFormat, handlebars_setup, render_template};
@@ -257,6 +259,22 @@ impl Code2PromptSession {
 
     /// Loads the codebase data (source tree and file list) into the session.
     pub fn load_codebase(&mut self) -> Result<()> {
+        // When comparing two branches, restrict both the source tree and the
+        // file content to only the files that actually changed, mirroring
+        // how `--include` filters both the tree and content. If the diff
+        // can't be computed (e.g. a branch doesn't exist), fall back to the
+        // unfiltered codebase; `load_git_diff_between_branches` will surface
+        // the underlying error to the user.
+        if let Some((branch1, branch2)) = self.config.diff_branches.clone() {
+            match get_git_diff_file_paths(&self.config.path, &branch1, &branch2) {
+                Ok(diff_files) => self.config.diff_files = Some(diff_files),
+                Err(e) => log::warn!(
+                    "Could not compute changed files between '{branch1}' and '{branch2}', \
+                     showing unfiltered codebase: {e}"
+                ),
+            }
+        }
+
         let (tree, files) = traverse_directory(&self.config, Some(&mut self.selection_engine))
             .with_context(|| "Failed to traverse directory")?;
 

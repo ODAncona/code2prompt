@@ -120,11 +120,19 @@ fn discover_files(
         let path = entry.path();
         if let Ok(relative_path) = path.strip_prefix(&canonical_root_path) {
             // Use SelectionEngine if available, otherwise fall back to pattern matching
-            let entry_match = if let Some(engine) = selection_engine.as_mut() {
+            let mut entry_match = if let Some(engine) = selection_engine.as_mut() {
                 engine.is_selected(relative_path)
             } else {
                 should_include_file(relative_path, &include_globset, &exclude_globset)
             };
+
+            // When `--git-diff-branch` is active, further restrict matches to
+            // only the files that changed between the two branches. This
+            // mirrors how include/exclude patterns prune both the tree and
+            // the file content list.
+            if let Some(diff_files) = &config.diff_files {
+                entry_match = entry_match && diff_files.contains(relative_path);
+            }
 
             // Directory Tree
             let include_in_tree = config.full_directory_tree || entry_match;

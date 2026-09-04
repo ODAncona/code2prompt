@@ -3,6 +3,7 @@
 use code2prompt_core::configuration::Code2PromptConfig;
 use code2prompt_core::session::Code2PromptSession;
 use std::fs;
+use std::path::Path;
 use tempfile::TempDir;
 
 #[cfg(test)]
@@ -177,5 +178,103 @@ mod tests {
         let selected_files = session.get_selected_files().unwrap();
         assert_eq!(selected_files.len(), 1);
         assert_eq!(selected_files[0], main_rs_relative);
+    }
+
+    /// Regression test for https://github.com/mufeedvh/code2prompt/issues/176
+    ///
+    /// With `--git-diff-branch`, the source tree (and file content) must be
+    /// pruned down to only the files that actually changed between the two
+    /// branches, the same way `--include` filters both the tree and content.
+    #[test]
+    fn test_git_diff_branch_prunes_source_tree_to_changed_files() {
+        use git2::{Repository, RepositoryInitOptions, Signature};
+
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path();
+
+        let mut binding = RepositoryInitOptions::new();
+        let init_options = binding.initial_head("master");
+        let repo = Repository::init_opts(repo_path, init_options)
+            .expect("Failed to initialize repository");
+
+        fs::create_dir_all(repo_path.join("src")).unwrap();
+        fs::write(repo_path.join("src/changed.rs"), "fn changed() {}").unwrap();
+        fs::write(repo_path.join("src/unchanged.rs"), "fn unchanged() {}").unwrap();
+
+        let signature = Signature::now("Test", "test@example.com").unwrap();
+
+        // Commit both files on master
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("src/changed.rs")).unwrap();
+        index.add_path(Path::new("src/unchanged.rs")).unwrap();
+        index.write().unwrap();
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let master_commit = repo
+            .commit(
+                Some("HEAD"),
+                &signature,
+                &signature,
+                "Initial commit",
+                &tree,
+                &[],
+            )
+            .expect("Failed to commit");
+
+        // Create a feature branch and only modify one of the two files there
+        repo.branch("feature", &repo.find_commit(master_commit).unwrap(), false)
+            .expect("Failed to create new branch");
+        repo.set_head("refs/heads/feature").unwrap();
+        repo.checkout_head(None).unwrap();
+
+        fs::write(
+            repo_path.join("src/changed.rs"),
+            "fn changed() { /* updated */ }",
+        )
+        .unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("src/changed.rs")).unwrap();
+        index.write().unwrap();
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            "Update changed.rs",
+            &tree,
+            &[&repo.find_commit(master_commit).unwrap()],
+        )
+        .expect("Failed to commit on feature branch");
+
+        let config = Code2PromptConfig::builder()
+            .path(repo_path.to_path_buf())
+            .diff_branches(Some(("master".to_string(), "feature".to_string())))
+            .build()
+            .unwrap();
+
+        let mut session = Code2PromptSession::new(config);
+        session.load_codebase().expect("Failed to load codebase");
+
+        let source_tree = session.data.source_tree.clone().unwrap_or_default();
+        assert!(
+            source_tree.contains("changed.rs"),
+            "expected diffed file in source tree, got:\n{source_tree}"
+        );
+        assert!(
+            !source_tree.contains("unchanged.rs"),
+            "expected unchanged file to be pruned from source tree, got:\n{source_tree}"
+        );
+
+        let files = session.data.files.clone().unwrap_or_default();
+        assert!(
+            files.iter().any(|f| f.path.contains("changed.rs")),
+            "expected diffed file in file content list"
+        );
+        assert!(
+            !files.iter().any(|f| f.path.contains("unchanged.rs")),
+            "expected unchanged file to be excluded from file content list"
+        );
     }
 }
