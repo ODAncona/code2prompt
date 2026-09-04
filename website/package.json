@@ -23,9 +23,9 @@
     "@astrojs/sitemap": "3.7.3",
     "@astrojs/starlight": "^0.40.0",
     "@astrojs/upgrade": "^0.6.2",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "astro": "6.4.6",
     "marked": "^17.0.6",
     "prismjs": "^1.30.0",
@@ -33,14 +33,14 @@
     "remark-math": "^6.0.0",
     "sharp": "^0.34.5",
     "starlight-blog": "^0.26.1",
-    "tailwindcss": "^4.3.1"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "dlx": "^0.2.1",
     "jest": "30.4.2",
     "prettier-plugin-astro": "^0.14.1",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "packageManager": "pnpm@10.18.0"
 }
