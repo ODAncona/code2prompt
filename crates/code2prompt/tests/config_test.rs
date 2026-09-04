@@ -38,6 +38,11 @@ token_map_enabled = true
 [user_variables]
 project = "code2prompt"
 author = "ODAncona"
+
+[processors.ipynb]
+max_code_cells = 10
+include_outputs = true
+include_markdown = false
 "#;
 
     use code2prompt_core::configuration::TomlConfig;
@@ -82,6 +87,13 @@ author = "ODAncona"
         config.user_variables.get("author"),
         Some(&"ODAncona".to_string())
     );
+    assert_eq!(config.processors.ipynb.max_code_cells, 10);
+    assert!(config.processors.ipynb.include_outputs);
+    assert!(!config.processors.ipynb.include_markdown);
+
+    let core = config.to_code2prompt_config();
+    assert_eq!(core.processors.ipynb.max_code_cells, 10);
+    assert!(core.processors.ipynb.include_outputs);
 }
 
 /// Test TOML config export functionality

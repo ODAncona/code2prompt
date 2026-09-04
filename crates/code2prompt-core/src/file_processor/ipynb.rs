@@ -2,18 +2,94 @@
 //!
 //! This processor parses Jupyter notebook JSON and extracts:
 //! - Total number of cells and their types
-//! - Code cells only (ignoring markdown and raw cells)
-//! - First 2-3 code cells as samples
+//! - Code cells (and optionally markdown cells)
+//! - A configurable number of sample cells
+//! - Optional cell outputs
 //!
 //! This provides LLMs with notebook structure context without overwhelming them with all cells.
 
-use super::{DefaultTextProcessor, FileProcessor};
+use super::{DefaultTextProcessor, FileProcessor, IpynbProcessorConfig};
 use anyhow::{Context, Result};
 use serde_json::Value;
 use std::path::Path;
 
 /// Jupyter Notebook processor that extracts code cells and metadata.
-pub struct JupyterNotebookProcessor;
+pub struct JupyterNotebookProcessor {
+    config: IpynbProcessorConfig,
+}
+
+impl Default for JupyterNotebookProcessor {
+    fn default() -> Self {
+        Self {
+            config: IpynbProcessorConfig::default(),
+        }
+    }
+}
+
+impl JupyterNotebookProcessor {
+    /// Create a processor with the given configuration.
+    pub fn new(config: IpynbProcessorConfig) -> Self {
+        Self { config }
+    }
+
+    fn extract_source(source: &Value) -> String {
+        match source {
+            Value::String(s) => s.clone(),
+            Value::Array(arr) => arr
+                .iter()
+                .filter_map(|v| v.as_str())
+                .collect::<Vec<_>>()
+                .join(""),
+            _ => String::from("(Unable to extract source)"),
+        }
+    }
+
+    fn append_outputs(output: &mut String, cell: &Value) {
+        let Some(outputs) = cell.get("outputs").and_then(|v| v.as_array()) else {
+            return;
+        };
+        if outputs.is_empty() {
+            return;
+        }
+
+        output.push_str("Output:\n");
+        for out in outputs {
+            let output_type = out.get("output_type").and_then(|v| v.as_str()).unwrap_or("");
+            match output_type {
+                "stream" => {
+                    if let Some(text) = out.get("text") {
+                        let text = Self::extract_source(text);
+                        output.push_str(&text);
+                        if !text.ends_with('\n') {
+                            output.push('\n');
+                        }
+                    }
+                }
+                "execute_result" | "display_data" => {
+                    if let Some(data) = out.get("data")
+                        && let Some(text) = data.get("text/plain")
+                    {
+                        let text = Self::extract_source(text);
+                        output.push_str(&text);
+                        if !text.ends_with('\n') {
+                            output.push('\n');
+                        }
+                    }
+                }
+                "error" => {
+                    let ename = out
+                        .get("ename")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("Error");
+                    let evalue = out.get("evalue").and_then(|v| v.as_str()).unwrap_or("");
+                    output.push_str(&format!("{}: {}\n", ename, evalue));
+                }
+                _ => {}
+            }
+        }
+        output.push('\n');
+    }
+}
 
 impl FileProcessor for JupyterNotebookProcessor {
     fn process(&self, content: &[u8], _path: &Path) -> Result<String> {
@@ -27,8 +103,9 @@ impl FileProcessor for JupyterNotebookProcessor {
             .and_then(|v| v.as_array())
             .context("Notebook has no 'cells' array")?;
 
-        // Count cell types
+        // Count cell types and collect code / markdown cells
         let mut code_cells = Vec::new();
+        let mut markdown_cells = Vec::new();
         let mut markdown_count = 0;
         let mut raw_count = 0;
 
@@ -40,7 +117,10 @@ impl FileProcessor for JupyterNotebookProcessor {
 
             match cell_type {
                 "code" => code_cells.push(cell),
-                "markdown" => markdown_count += 1,
+                "markdown" => {
+                    markdown_count += 1;
+                    markdown_cells.push(cell);
+                }
                 "raw" => raw_count += 1,
                 _ => {}
             }
@@ -59,30 +139,33 @@ impl FileProcessor for JupyterNotebookProcessor {
             raw_count
         ));
 
+        if self.config.include_markdown {
+            for (idx, cell) in markdown_cells.iter().enumerate() {
+                output.push_str(&format!("Markdown Cell #{}:\n", idx + 1));
+                if let Some(source) = cell.get("source") {
+                    let text = Self::extract_source(source);
+                    output.push_str(&text);
+                    if !text.ends_with('\n') {
+                        output.push('\n');
+                    }
+                    output.push('\n');
+                }
+            }
+        }
+
         if code_cells.is_empty() {
             output.push_str("(No code cells found)\n");
             return Ok(output);
         }
 
-        // Show first 2-3 code cells
-        let max_cells_to_show = 3.min(code_cells.len());
+        let max_cells_to_show = self.config.max_code_cells.min(code_cells.len());
 
         for (idx, cell) in code_cells.iter().take(max_cells_to_show).enumerate() {
             output.push_str(&format!("Code Cell #{}:\n", idx + 1));
 
             // Extract source code
             if let Some(source) = cell.get("source") {
-                let code = match source {
-                    Value::String(s) => s.clone(),
-                    Value::Array(arr) => {
-                        // Join array of strings
-                        arr.iter()
-                            .filter_map(|v| v.as_str())
-                            .collect::<Vec<_>>()
-                            .join("")
-                    }
-                    _ => String::from("(Unable to extract source)"),
-                };
+                let code = Self::extract_source(source);
 
                 output.push_str("```python\n");
                 output.push_str(&code);
@@ -90,6 +173,10 @@ impl FileProcessor for JupyterNotebookProcessor {
                     output.push('\n');
                 }
                 output.push_str("```\n\n");
+            }
+
+            if self.config.include_outputs {
+                Self::append_outputs(&mut output, cell);
             }
         }
 

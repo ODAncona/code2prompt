@@ -5,6 +5,7 @@
 //! raw data where applicable. (e.g., schema + sample for CSV, code cells for Jupyter notebooks).
 
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 mod csv;
@@ -18,6 +19,44 @@ pub use default::DefaultTextProcessor;
 pub use ipynb::JupyterNotebookProcessor;
 pub use jsonl::JsonLinesProcessor;
 pub use tsv::TsvProcessor;
+
+/// Configuration for the Jupyter notebook (`.ipynb`) file processor.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct IpynbProcessorConfig {
+    /// Maximum number of code cells to include in the processed output.
+    ///
+    /// Default: `3`
+    pub max_code_cells: usize,
+
+    /// When true, include cell outputs (stdout / text/plain / errors) after each code cell.
+    ///
+    /// Default: `false`
+    pub include_outputs: bool,
+
+    /// When true, include markdown cells in the processed output.
+    ///
+    /// Default: `false`
+    pub include_markdown: bool,
+}
+
+impl Default for IpynbProcessorConfig {
+    fn default() -> Self {
+        Self {
+            max_code_cells: 3,
+            include_outputs: false,
+            include_markdown: false,
+        }
+    }
+}
+
+/// Configuration for all file processors.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct FileProcessorsConfig {
+    /// Jupyter notebook processor settings.
+    pub ipynb: IpynbProcessorConfig,
+}
 
 /// Trait for processing file contents into LLM-optimized string representations.
 ///
@@ -43,29 +82,20 @@ pub trait FileProcessor: Send + Sync {
 /// # Arguments
 ///
 /// * `extension` - File extension (without dot)
+/// * `processors` - Processor configuration (used by configurable processors such as ipynb)
 ///
 /// # Returns
 ///
 /// * `Box<dyn FileProcessor>` - Processor instance for the given extension
-///
-/// # Examples
-///
-/// ```rs
-/// use std::path::Path;
-/// use code2prompt_core::file_processor::get_processor_for_extension;
-///
-/// let processor = get_processor_for_extension("csv");
-/// let bytes = b"column1,column2\nvalue1,value2";
-/// let path = Path::new("fake_file.csv");
-/// 
-/// let result = processor.process(bytes, path).unwrap(); 
-/// ```
-pub fn get_processor_for_extension(extension: &str) -> Box<dyn FileProcessor> {
+pub fn get_processor_for_extension(
+    extension: &str,
+    processors: &FileProcessorsConfig,
+) -> Box<dyn FileProcessor> {
     match extension.to_lowercase().as_str() {
         "csv" => Box::new(CsvProcessor),
         "tsv" => Box::new(TsvProcessor),
         "jsonl" | "ndjson" => Box::new(JsonLinesProcessor),
-        "ipynb" => Box::new(JupyterNotebookProcessor),
+        "ipynb" => Box::new(JupyterNotebookProcessor::new(processors.ipynb.clone())),
         // Future processors can be added here:
         // "parquet" => Box::new(ParquetProcessor),
         // "xml" => Box::new(XmlProcessor),

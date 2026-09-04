@@ -2,6 +2,7 @@
 //! of code2prompt in a stateless manner. It includes all parameters needed for file traversal,
 //! code filtering, token counting, and more.
 
+use crate::file_processor::FileProcessorsConfig;
 use crate::template::OutputFormat;
 use crate::tokenizer::TokenizerType;
 use crate::{sort::FileSortMethod, tokenizer::TokenFormat};
@@ -125,6 +126,9 @@ pub struct Code2PromptConfig {
 
     /// If true, starts with all files deselected.
     pub deselected: bool,
+
+    /// Settings for file-type processors (e.g. Jupyter notebooks).
+    pub processors: FileProcessorsConfig,
 }
 
 impl Code2PromptConfig {
@@ -191,6 +195,9 @@ pub struct TomlConfig {
 
     /// Initial selection state
     pub deselected: bool,
+
+    /// File processor settings (nested tables such as `[processors.ipynb]`)
+    pub processors: FileProcessorsConfig,
 }
 
 impl TomlConfig {
@@ -252,7 +259,8 @@ impl TomlConfig {
         builder
             .user_variables(self.user_variables.clone())
             .token_map_enabled(self.token_map_enabled)
-            .deselected(self.deselected);
+            .deselected(self.deselected)
+            .processors(self.processors.clone());
 
         builder.build().unwrap_or_default()
     }
@@ -294,6 +302,7 @@ pub fn export_config_to_toml(config: &Code2PromptConfig) -> Result<String, toml:
         user_variables: config.user_variables.clone(),
         token_map_enabled: config.token_map_enabled,
         deselected: config.deselected,
+        processors: config.processors.clone(),
     };
 
     toml_config.to_string()
