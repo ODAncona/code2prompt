@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Ajoutez des numéros de ligne aux blocs de code source :
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Désactivez l'emballage de code à l'intérieur des blocs de code markdown :

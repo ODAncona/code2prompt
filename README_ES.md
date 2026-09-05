@@ -174,7 +174,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Añadir números de línea a los bloques de código fuente:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Desactivar el envoltorio de código dentro de bloques de código markdown:

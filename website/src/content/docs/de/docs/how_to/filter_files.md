@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Fügen Sie Zeilennummern zu Quellcodeblöcken hinzu:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Deaktivieren Sie das Umbrechen von Code innerhalb von Markdown-Codeblöcken:
