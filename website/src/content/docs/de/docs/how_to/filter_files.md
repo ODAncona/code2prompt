@@ -33,7 +33,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Schließen Sie Dateien/Ordner aus dem Quellbaum basierend auf Ausschlussmustern aus:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Zeigen Sie die Tokenanzahl des generierten Prompts an:

@@ -33,7 +33,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 根据排除模式从源树中排除文件/文件夹：
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 显示生成的提示的 token 数量：

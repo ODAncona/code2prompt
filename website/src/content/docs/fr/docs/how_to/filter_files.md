@@ -33,7 +33,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Excluez les fichiers/dossiers de l'arborescence source en fonction des modèles d'exclusion :
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Affichez le nombre de jetons de l'invite générée :

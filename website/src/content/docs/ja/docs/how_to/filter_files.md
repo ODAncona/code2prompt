@@ -33,7 +33,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 ソースツリーから除外パターンに基づいてファイル/フォルダを除外する:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 生成されたプロンプトのトークン数を表示する:

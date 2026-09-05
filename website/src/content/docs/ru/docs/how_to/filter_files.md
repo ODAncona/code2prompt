@@ -33,7 +33,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Исключить файлы/папки из дерева исходных файлов на основе шаблонов исключения:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Отобразить количество токенов сгенерированного запроса:

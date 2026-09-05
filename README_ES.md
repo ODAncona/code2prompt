@@ -116,7 +116,7 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Excluir archivos/carpetas del árbol de origen basándose en patrones de exclusión:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Mostrar el conteo de tokens del prompt generado:

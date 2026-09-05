@@ -57,8 +57,10 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Exclude files/folders from the source tree based on exclude patterns:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
+
+Filtered-out paths are pruned from the source tree by default. Use `--full-directory-tree` to print the whole tree regardless of the include/exclude patterns.
 
 Display the token count of the generated prompt:
 
