@@ -39,13 +39,13 @@ code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
 Affichez le nombre de jetons de l'invite générée :
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Spécifiez un tokenizeur pour le décompte des jetons :
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Tokenizeurs pris en charge : `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.

@@ -62,13 +62,13 @@ code2prompt путь/к/кодовой/базе --exclude="*.npy,*.wav" --exclud
 Отображение количества токенов сгенерированного промпта:
 
 ```sh
-code2prompt путь/к/кодовой/базе --tokens
+code2prompt путь/к/кодовой/базе --token-format=format
 ```
 
 Указание токенизатора для подсчёта токенов:
 
 ```sh
-code2prompt путь/к/кодовой/базе --tokens --encoding=p50k
+code2prompt путь/к/кодовой/базе --encoding=p50k
 ```
 
 Поддерживаемые токенизаторы: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.

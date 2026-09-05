@@ -39,13 +39,13 @@ code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
 Zeigen Sie die Tokenanzahl des generierten Prompts an:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Geben Sie einen Tokenizer für die Tokenanzahl an:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Unterstützte Tokenizer: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.

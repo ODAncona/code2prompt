@@ -122,13 +122,13 @@ code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
 Mostrar el conteo de tokens del prompt generado:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Especificar un tokenizador para el conteo de tokens:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Tokenizadores soportados: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.

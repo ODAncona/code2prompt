@@ -39,13 +39,13 @@ code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
 显示生成的提示的 token 数量：
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 指定 token 计数器的 tokenizer：
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 支持的 tokenizer：`cl100k`、`p50k`、`p50k_edit`、`r50k_bas`。

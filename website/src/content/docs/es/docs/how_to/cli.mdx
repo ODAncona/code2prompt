@@ -63,13 +63,13 @@ code2prompt ruta/a/código-base --exclude="*.npy,*.wav" --exclude-from-tree
 Mostrar el recuento de tokens del prompt generado:
 
 ```sh
-code2prompt ruta/a/código-base --tokens
+code2prompt ruta/a/código-base --token-format=format
 ```
 
 Especificar un tokenizador para el recuento de tokens:
 
 ```sh
-code2prompt ruta/a/código-base --tokens --encoding=p50k
+code2prompt ruta/a/código-base --encoding=p50k
 ```
 
 Tokenizadores compatibles: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
