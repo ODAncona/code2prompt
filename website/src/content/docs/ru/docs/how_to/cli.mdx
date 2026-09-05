@@ -56,19 +56,19 @@ code2prompt путь/к/кодовой/базе --exclude="*.txt,*.md"
 Исключение файлов/папок из дерева исходного кода по шаблонам исключения:
 
 ```sh
-code2prompt путь/к/кодовой/базе --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt путь/к/кодовой/базе --exclude="*.npy,*.wav"
 ```
 
 Отображение количества токенов сгенерированного промпта:
 
 ```sh
-code2prompt путь/к/кодовой/базе --tokens
+code2prompt путь/к/кодовой/базе --token-format=format
 ```
 
 Указание токенизатора для подсчёта токенов:
 
 ```sh
-code2prompt путь/к/кодовой/базе --tokens --encoding=p50k
+code2prompt путь/к/кодовой/базе --encoding=p50k
 ```
 
 Поддерживаемые токенизаторы: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -116,7 +116,7 @@ code2prompt путь/к/кодовой/базе --git-diff-branch 'main, develop
 Добавление номеров строк к блокам кода:
 
 ```sh
-code2prompt путь/к/кодовой/базе --line-number
+code2prompt путь/к/кодовой/базе --line-numbers
 ```
 
 Отключение обёртки кода в markdown‑блоках:

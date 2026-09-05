@@ -57,19 +57,21 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Exclude files/folders from the source tree based on exclude patterns:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
+
+Filtered-out paths are pruned from the source tree by default. Use `--full-directory-tree` to print the whole tree regardless of the include/exclude patterns.
 
 Display the token count of the generated prompt:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Specify a tokenizer for token count:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Supported tokenizers: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -116,7 +118,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Add line numbers to source code blocks:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Disable wrapping code inside markdown code blocks:
