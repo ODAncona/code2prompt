@@ -56,19 +56,19 @@ code2prompt pfad/zur/codebase --exclude="*.txt,*.md"
 Dateien/Ordner im Quellbaum anhand von Ausschlussmustern entfernen:
 
 ```sh
-code2prompt pfad/zur/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt pfad/zur/codebase --exclude="*.npy,*.wav"
 ```
 
 Token‑Anzahl des generierten Prompts anzeigen:
 
 ```sh
-code2prompt pfad/zur/codebase --tokens
+code2prompt pfad/zur/codebase --token-format=format
 ```
 
 Tokenizer für die Token‑Zählung angeben:
 
 ```sh
-code2prompt pfad/zur/codebase --tokens --encoding=p50k
+code2prompt pfad/zur/codebase --encoding=p50k
 ```
 
 Unterstützte Tokenizer: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -115,7 +115,7 @@ code2prompt pfad/zur/codebase --git-diff-branch 'main, development' --git-log-br
 Zeilennummern zu Quellcode‑Blöcken hinzufügen:
 
 ```sh
-code2prompt pfad/zur/codebase --line-number
+code2prompt pfad/zur/codebase --line-numbers
 ```
 
 Code‑Block‑Umhüllung in Markdown‑Blöcken deaktivieren:

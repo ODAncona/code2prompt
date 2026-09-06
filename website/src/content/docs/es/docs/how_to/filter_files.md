@@ -33,19 +33,19 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Excluir archivos/carpeta del árbol de origen según patrones de exclusión:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Mostrar el recuento de tokens del prompt generado:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Especificar un tokenizador para el recuento de tokens:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Tokenizadores compatibles: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Agregar números de línea a bloques de código fuente:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Deshabilitar el ajuste de código dentro de bloques de código markdown:

@@ -33,19 +33,19 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Исключить файлы/папки из дерева исходных файлов на основе шаблонов исключения:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Отобразить количество токенов сгенерированного запроса:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Указать токенизатор для подсчета токенов:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Поддерживаемые токенизаторы: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Добавить номера строк к блокам исходного кода:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Отключить оборачивание кода внутри блоков markdown:

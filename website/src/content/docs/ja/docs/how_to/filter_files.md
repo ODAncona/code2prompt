@@ -33,19 +33,19 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 ソースツリーから除外パターンに基づいてファイル/フォルダを除外する:
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 生成されたプロンプトのトークン数を表示する:
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 トークン数にトークナイザを指定する:
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 サポートされているトークナイザ: `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 ソースコードブロックに行番号を追加する:
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Markdownコードブロック内のコードのラッピングを無効にする:

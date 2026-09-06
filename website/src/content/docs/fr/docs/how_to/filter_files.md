@@ -33,19 +33,19 @@ code2prompt path/to/codebase --exclude="*.txt,*.md"
 Excluez les fichiers/dossiers de l'arborescence source en fonction des modèles d'exclusion :
 
 ```sh
-code2prompt path/to/codebase --exclude="*.npy,*.wav" --exclude-from-tree
+code2prompt path/to/codebase --exclude="*.npy,*.wav"
 ```
 
 Affichez le nombre de jetons de l'invite générée :
 
 ```sh
-code2prompt path/to/codebase --tokens
+code2prompt path/to/codebase --token-format=format
 ```
 
 Spécifiez un tokenizeur pour le décompte des jetons :
 
 ```sh
-code2prompt path/to/codebase --tokens --encoding=p50k
+code2prompt path/to/codebase --encoding=p50k
 ```
 
 Tokenizeurs pris en charge : `cl100k`, `p50k`, `p50k_edit`, `r50k_bas`.
@@ -91,7 +91,7 @@ code2prompt path/to/codebase --git-diff-branch 'main, development' --git-log-bra
 Ajoutez des numéros de ligne aux blocs de code source :
 
 ```sh
-code2prompt path/to/codebase --line-number
+code2prompt path/to/codebase --line-numbers
 ```
 
 Désactivez l'emballage de code à l'intérieur des blocs de code markdown :
