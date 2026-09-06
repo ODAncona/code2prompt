@@ -1,57 +1,75 @@
-"""Pytest fixtures for code2prompt tests."""
-import os
-import pytest
-import tempfile
-import shutil
+"""Shared fixtures for the native Python bindings."""
+
+import json
+import subprocess
 from pathlib import Path
 
-@pytest.fixture(scope="module")
-def test_hierarchy():
-    """Create a test hierarchy of files and directories."""
-    # Create a temporary directory
-    temp_dir = tempfile.mkdtemp()
-    
-    try:
-        # Create directories
-        lowercase_dir = Path(temp_dir) / "lowercase"
-        uppercase_dir = Path(temp_dir) / "uppercase"
-        secret_dir = Path(temp_dir) / ".secret"
-        
-        for dir_path in [lowercase_dir, uppercase_dir, secret_dir]:
-            dir_path.mkdir(parents=True, exist_ok=True)
-        
-        # Create files
-        files = [
-            ("lowercase/foo.py", "def foo():\n    return 'foo'\n"),
-            ("lowercase/bar.py", "def bar():\n    return 'bar'\n"),
-            ("lowercase/baz.py", "def baz():\n    return 'baz'\n"),
-            ("lowercase/qux.txt", "content qux.txt"),
-            ("lowercase/corge.txt", "content corge.txt"),
-            ("lowercase/grault.txt", "content grault.txt"),
-            ("uppercase/FOO.py", "def FOO():\n    return 'FOO'\n"),
-            ("uppercase/BAR.py", "def BAR():\n    return 'BAR'\n"),
-            ("uppercase/BAZ.py", "def BAZ():\n    return 'BAZ'\n"),
-            ("uppercase/QUX.txt", "CONTENT QUX.TXT"),
-            ("uppercase/CORGE.txt", "CONTENT CORGE.TXT"),
-            ("uppercase/GRAULT.txt", "CONTENT GRAULT.TXT"),
-            (".secret/secret.txt", "SECRET"),
-        ]
-        
-        for file_path, content in files:
-            full_path = Path(temp_dir) / file_path
-            full_path.write_text(content)
-            
-        # Create a gitignore file
-        gitignore_path = Path(temp_dir) / ".gitignore"
-        gitignore_path.write_text("*.txt\n")
-            
-        # Return the path
-        yield temp_dir
-    finally:
-        # Clean up
-        shutil.rmtree(temp_dir)
+import pytest
 
-@pytest.fixture
-def test_dir(test_hierarchy):
-    """Return the path to the test hierarchy."""
-    return test_hierarchy
+
+@pytest.fixture()
+def project(tmp_path: Path) -> Path:
+    """Create a small repository-like tree with ignored and hidden files."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "tests").mkdir()
+    (tmp_path / ".secret").mkdir()
+
+    (tmp_path / "src" / "main.py").write_text(
+        "def main():\n    return 'main'\n", encoding="utf-8"
+    )
+    (tmp_path / "src" / "utils.py").write_text(
+        "def helper():\n    return 42\n", encoding="utf-8"
+    )
+    (tmp_path / "tests" / "test_main.py").write_text(
+        "def test_main():\n    assert True\n", encoding="utf-8"
+    )
+    (tmp_path / "README.md").write_text("# Test project\n", encoding="utf-8")
+    (tmp_path / "ignored.txt").write_text("ignored by gitignore\n", encoding="utf-8")
+    (tmp_path / ".secret" / "secret.py").write_text("SECRET = True\n", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("*.txt\n", encoding="utf-8")
+
+    notebook = {
+        "cells": [
+            {"cell_type": "markdown", "source": ["# Notes\n"]},
+            {
+                "cell_type": "code",
+                "source": ["print('hello')\n"],
+                "outputs": [
+                    {"output_type": "stream", "name": "stdout", "text": ["hello\n"]}
+                ],
+            },
+            {"cell_type": "code", "source": ["x = 2\n"], "outputs": []},
+        ]
+    }
+    (tmp_path / "notebook.ipynb").write_text(json.dumps(notebook), encoding="utf-8")
+    run_git(tmp_path, "init")
+    return tmp_path
+
+
+def run_git(repository: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", *args],
+        cwd=repository,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+
+
+@pytest.fixture()
+def git_project(tmp_path: Path) -> Path:
+    """Create a two-branch Git repository for session Git tests."""
+    run_git(tmp_path, "init", "-b", "main")
+    run_git(tmp_path, "config", "user.name", "Code2Prompt Tests")
+    run_git(tmp_path, "config", "user.email", "tests@code2prompt.dev")
+
+    (tmp_path / "changed.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (tmp_path / "unchanged.py").write_text("STABLE = True\n", encoding="utf-8")
+    run_git(tmp_path, "add", ".")
+    run_git(tmp_path, "commit", "-m", "initial")
+
+    run_git(tmp_path, "switch", "-c", "feature")
+    (tmp_path / "changed.py").write_text("VALUE = 2\n", encoding="utf-8")
+    run_git(tmp_path, "add", "changed.py")
+    run_git(tmp_path, "commit", "-m", "change value")
+    return tmp_path

@@ -19,3 +19,29 @@ jobs:
     - uses: actions/checkout@v6
     - name: Run tests
       run: cargo test --verbose
+
+  python-bindings:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.14"]
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install uv and Python
+      uses: astral-sh/setup-uv@v9
+      with:
+        version: "0.12.10"
+        python-version: ${{ matrix.python-version }}
+        enable-cache: true
+        cache-dependency-glob: crates/code2prompt-python/uv.lock
+    - name: Sync Python project
+      working-directory: crates/code2prompt-python
+      run: uv sync --locked
+    - name: Run Python tests
+      working-directory: crates/code2prompt-python
+      run: uv run --locked pytest
+    - name: Build release wheel
+      if: matrix.python-version == '3.11'
+      working-directory: crates/code2prompt-python
+      run: uv run --locked maturin build --release --out ../../dist

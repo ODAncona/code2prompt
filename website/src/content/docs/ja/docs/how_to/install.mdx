@@ -151,7 +151,8 @@ pip install code2prompt_rs
 
     - [Rust](https://www.rust-lang.org/tools/install)とCargo
     - [Git](https://git-scm.com/downloads)
-    - [Rye](https://rye.astral.sh/)
+    - [Python 3.11+](https://www.python.org/downloads/)
+    - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 2.  📥 リポジトリをクローンする :
 
@@ -162,18 +163,18 @@ pip install code2prompt_rs
 
 3.  📦 依存関係をインストールする :
 
-    `rye`コマンドは、仮想環境を作成し、すべての依存関係をインストールします。
+    `uv`は`.venv`を作成し、開発用依存関係をロックして、ネイティブ拡張を編集可能モードでビルドします。
 
     ```sh
-    rye sync
+    uv sync
     ```
 
-4.  ⚙️ パッケージをビルドする :
+4.  🧪 テストを実行する :
 
-    プロジェクトのルートにある`.venv`フォルダ内の仮想環境でパッケージを開発します。
+    同期済みの環境でプロジェクトのテストコマンドを実行します。
 
     ```sh
-    rye run maturin develop -r
+    uv run pytest
     ```
 
 </Steps>

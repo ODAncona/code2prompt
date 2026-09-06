@@ -100,17 +100,17 @@ To learn more about `code2prompt`, check out the following tutorials:
 For programmatic control, use the Python SDK:
 
 ```python
-from code2prompt_rs import Code2Prompt
+from code2prompt_rs import Code2PromptConfig, Code2PromptSession
 
-config = {
-    "path": "my_project",
-    "include_patterns": ["*.rs"],
-    "exclude_patterns": ["tests/*"],
-}
+config = Code2PromptConfig(
+    "my_project",
+    include_patterns=["*.rs"],
+    exclude_patterns=["tests/*"],
+)
 
-c2p = Code2Prompt(**config)
-prompt = c2p.generate_prompt()
-print(prompt)
+session = Code2PromptSession(config)
+result = session.generate_prompt()
+print(result.prompt)
 ```
 
 This requires installing the SDK (`pip install code2prompt_rs`). Refer to the SDK documentation for more details.
@@ -118,4 +118,3 @@ This requires installing the SDK (`pip install code2prompt_rs`). Refer to the SD
 ## 🤖 Harness Integration
 
 To reduce token usage of your harness, you can let your agent run `code2prompt` as a MCP server or as a skill. This allows agents to request code context dynamically in a way that replaces multiple `find`, `glob` and `grep` calls.
-
