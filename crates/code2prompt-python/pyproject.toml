@@ -1,12 +1,13 @@
 [project]
 name = "code2prompt_rs"
-version = "3.2.1"
+version = "4.3.0"
 description = "Python bindings for code2prompt"
 authors = [
     { name = "Olivier D'Ancona", email = "olivier_dancona@hotmail.com" },
     { name = "Mufeed VH", email = "contact@mufeedvh.com" },
 ]
-dependencies = ["pip>=25.0.1", "patchelf>=0.17.2.1"]
+dependencies = []
+readme = "README.md"
 requires-python = ">= 3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -16,33 +17,39 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Rust",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.8.2,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
 bindings = "pyo3"
 module-name = "code2prompt_rs"
 manifest-path = "Cargo.toml"
-python-source = "python-sdk"
 features = ["pyo3/extension-module"]
 
-[tool.rye]
-managed = true
-dev-dependencies = ["maturin>=1.8.2", "pytest>=8.3.5"]
+[dependency-groups]
+dev = [
+    "maturin>=1.8.2,<2.0",
+    "pytest>=8.3.5",
+]
 
-[tool.rye.scripts]
-build = "maturin develop"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/python_sdk"]
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "../../Cargo.toml" },
+    { file = "../../Cargo.lock" },
+    { file = "src/**/*.rs" },
+    { file = "../code2prompt-core/Cargo.toml" },
+    { file = "../code2prompt-core/src/**/*.rs" },
+    { file = "../code2prompt-core/templates/**/*" },
+]
 
 [project.urls]
 Homepage = "https://code2prompt.dev"

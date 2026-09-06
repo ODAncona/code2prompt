@@ -17,12 +17,7 @@ updates:
     directory: "/crates/code2prompt-core"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "pip" # pyproject.toml
-    target-branch: "main"
-    directory: "/crates/code2prompt-python"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "uv" # requirements.lock
+  - package-ecosystem: "uv" # pyproject.toml and uv.lock
     target-branch: "main"
     directory: "/crates/code2prompt-python"
     schedule:
