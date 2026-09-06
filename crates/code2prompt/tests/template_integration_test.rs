@@ -38,6 +38,17 @@ fn test_output_format_templates(
             format
         );
     }
+
+    if format == "xml" {
+        assert!(
+            !output.contains("```"),
+            "XML output must not contain Markdown code fences"
+        );
+        assert!(
+            output.contains("  <file path=\"src/main.rs\">\nfn main()"),
+            "XML file contents should preserve their original indentation"
+        );
+    }
 }
 
 /// Test JSON output format (special case with structured output)

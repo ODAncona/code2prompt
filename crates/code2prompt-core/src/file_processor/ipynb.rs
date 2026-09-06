@@ -14,20 +14,12 @@ use serde_json::Value;
 use std::path::Path;
 
 /// Jupyter Notebook processor that extracts code cells and metadata.
+#[derive(Default)]
 pub struct JupyterNotebookProcessor {
     config: IpynbProcessorConfig,
 }
 
-impl Default for JupyterNotebookProcessor {
-    fn default() -> Self {
-        Self {
-            config: IpynbProcessorConfig::default(),
-        }
-    }
-}
-
 impl JupyterNotebookProcessor {
-    /// Create a processor with the given configuration.
     pub fn new(config: IpynbProcessorConfig) -> Self {
         Self { config }
     }
@@ -54,7 +46,10 @@ impl JupyterNotebookProcessor {
 
         output.push_str("Output:\n");
         for out in outputs {
-            let output_type = out.get("output_type").and_then(|v| v.as_str()).unwrap_or("");
+            let output_type = out
+                .get("output_type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             match output_type {
                 "stream" => {
                     if let Some(text) = out.get("text") {
@@ -77,10 +72,7 @@ impl JupyterNotebookProcessor {
                     }
                 }
                 "error" => {
-                    let ename = out
-                        .get("ename")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("Error");
+                    let ename = out.get("ename").and_then(|v| v.as_str()).unwrap_or("Error");
                     let evalue = out.get("evalue").and_then(|v| v.as_str()).unwrap_or("");
                     output.push_str(&format!("{}: {}\n", ename, evalue));
                 }

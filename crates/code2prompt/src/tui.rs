@@ -447,7 +447,12 @@ impl TuiApp {
             KeyCode::Char('c') | KeyCode::Char('C') => Some(Message::CopyToClipboard),
             KeyCode::Char('s') | KeyCode::Char('S') => {
                 let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
-                let filename = format!("prompt_{}.md", timestamp);
+                let extension = match self.model.session.config.output_format {
+                    code2prompt_core::template::OutputFormat::Markdown => "md",
+                    code2prompt_core::template::OutputFormat::Json => "json",
+                    code2prompt_core::template::OutputFormat::Xml => "xml",
+                };
+                let filename = format!("prompt_{}.{}", timestamp, extension);
                 Some(Message::SaveToFile(filename))
             }
             KeyCode::Enter => Some(Message::RunAnalysis),
@@ -499,9 +504,13 @@ impl TuiApp {
                 let tx = self.message_tx.clone();
 
                 tokio::spawn(async move {
-                    // Set custom template content
+                    // An empty template delegates to the core's format-specific default.
                     session.config.template_str = template_content;
-                    session.config.template_name = "Custom Template".to_string();
+                    session.config.template_name = if session.config.template_str.is_empty() {
+                        "default".to_string()
+                    } else {
+                        "Custom Template".to_string()
+                    };
 
                     // Transfer user variables from TUI to session config
                     session.config.user_variables = user_variables;

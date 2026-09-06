@@ -3,10 +3,11 @@
 //! This module contains the state and logic for the template editor component,
 //! including TextArea management, validation, and content synchronization.
 
+use anyhow::{Result, anyhow};
+use code2prompt_core::template::OutputFormat;
+use ratatui_textarea::{CursorMove, TextArea};
 use regex::Regex;
 use std::collections::HashSet;
-use ratatui_textarea::{TextArea, CursorMove};
-use anyhow::{Result, anyhow};
 
 /// State for the template editor component
 #[derive(Debug)]
@@ -40,21 +41,32 @@ impl Clone for EditorState {
 
 impl Default for EditorState {
     fn default() -> Self {
-        // Load default markdown template from API
-        let content = if let Some(builtin_template) =
-            code2prompt_core::builtin_templates::BuiltinTemplates::get_template("default-markdown")
-        {
-            builtin_template.content
-        } else {
-            "# {{project_name}}\n\n{{#if files}}\n{{#each files}}\n## {{path}}\n\n```{{extension}}\n{{content}}\n```\n\n{{/each}}\n{{/if}}"
+        Self::for_output_format(OutputFormat::Markdown)
+    }
+}
+
+impl EditorState {
+    /// Create an editor initialized with the automatic template for an output format.
+    pub fn for_output_format(output_format: OutputFormat) -> Self {
+        let template_key = match output_format {
+            OutputFormat::Markdown => "default-markdown",
+            OutputFormat::Json | OutputFormat::Xml => "default-xml",
         };
+        let builtin =
+            code2prompt_core::builtin_templates::BuiltinTemplates::get_template(template_key)
+                .expect("default templates are embedded in the binary");
 
+        Self::from_content(builtin.content, builtin.name)
+    }
+
+    /// Create an editor initialized with explicit template content.
+    pub fn from_content(content: impl Into<String>, template_name: impl Into<String>) -> Self {
+        let content = content.into();
         let editor = TextArea::from(content.lines());
-
         let mut state = Self {
-            content: content.to_string(),
+            content,
             editor,
-            current_template_name: "Default (Markdown)".to_string(),
+            current_template_name: template_name.into(),
             is_valid: true,
             validation_message: String::new(),
             template_variables: Vec::new(),
@@ -63,9 +75,7 @@ impl Default for EditorState {
         state.analyze_template_variables();
         state
     }
-}
 
-impl EditorState {
     /// Update content from TextArea and re-analyze variables
     pub fn sync_content_from_textarea(&mut self) {
         self.content = self.editor.lines().join("\n");
@@ -123,11 +133,12 @@ impl EditorState {
     /// Attempt to compile the template to check for syntax errors
     fn compile_template(&self) -> Result<()> {
         let mut handlebars = handlebars::Handlebars::new();
-        handlebars.set_strict_mode(false); 
+        handlebars.set_strict_mode(false);
 
-        handlebars.register_template_string("test", &self.content)
+        handlebars
+            .register_template_string("test", &self.content)
             .map_err(|e| anyhow!("Failed to compile template: {}", e))?;
-            
+
         Ok(())
     }
 

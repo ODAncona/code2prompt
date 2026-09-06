@@ -223,6 +223,7 @@ impl Default for Model {
 
 impl Model {
     pub fn new(session: Code2PromptSession) -> Self {
+        let template = TemplateState::from_session(&session);
         Model {
             session,
             current_tab: Tab::FileTree,
@@ -234,7 +235,7 @@ impl Model {
             file_tree_scroll: 0,
             settings: SettingsState::default(),
             statistics: StatisticsState::default(),
-            template: TemplateState::default(),
+            template,
             prompt_output: PromptOutputState::default(),
             status_message: String::new(),
         }
@@ -445,11 +446,19 @@ impl Model {
             Message::ToggleSetting(index) => {
                 let items = new_model.settings.get_settings_items(&new_model.session);
                 if let Some(item) = items.get(index) {
+                    let setting_key = item.key;
                     let setting_name = new_model.settings.update_setting_by_key(
                         &mut new_model.session,
-                        item.key,
+                        setting_key,
                         SettingAction::Toggle,
                     );
+                    if setting_key == SettingKey::OutputFormat
+                        && new_model.template.uses_automatic_template
+                    {
+                        new_model
+                            .template
+                            .reset_to_automatic_template(new_model.session.config.output_format);
+                    }
                     new_model.status_message = format!("Toggled {}", setting_name);
                 } else {
                     new_model.status_message = format!("Invalid setting index: {}", index);
@@ -460,11 +469,19 @@ impl Model {
             Message::CycleSetting(index) => {
                 let items = new_model.settings.get_settings_items(&new_model.session);
                 if let Some(item) = items.get(index) {
+                    let setting_key = item.key;
                     let setting_name = new_model.settings.update_setting_by_key(
                         &mut new_model.session,
-                        item.key,
+                        setting_key,
                         SettingAction::Cycle,
                     );
+                    if setting_key == SettingKey::OutputFormat
+                        && new_model.template.uses_automatic_template
+                    {
+                        new_model
+                            .template
+                            .reset_to_automatic_template(new_model.session.config.output_format);
+                    }
                     new_model.status_message = format!("Cycled {}", setting_name);
                 } else {
                     new_model.status_message = format!("Invalid setting index: {}", index);
@@ -480,7 +497,11 @@ impl Model {
                     new_model.current_tab = Tab::PromptOutput; // Switch to output tab
 
                     let cmd = Cmd::RunAnalysis {
-                        template_content: new_model.template.get_template_content().to_string(),
+                        template_content: if new_model.template.uses_automatic_template {
+                            String::new()
+                        } else {
+                            new_model.template.get_template_content().to_string()
+                        },
                         user_variables: new_model.template.variables.user_variables.clone(),
                     };
                     (new_model, cmd)
@@ -585,8 +606,9 @@ impl Model {
             }
 
             Message::ReloadTemplate => {
-                new_model.template.editor = crate::model::template::EditorState::default();
-                new_model.template.sync_variables_with_template();
+                new_model
+                    .template
+                    .reset_to_automatic_template(new_model.session.config.output_format);
                 new_model.status_message = "Reloaded template".to_string();
                 (new_model, Cmd::None)
             }
@@ -631,10 +653,13 @@ impl Model {
             }
 
             Message::TemplateEditorInput(key) => {
-                new_model.template.editor.editor.input(key);
+                let content_changed = new_model.template.editor.editor.input(key);
                 new_model.template.editor.sync_content_from_textarea();
                 new_model.template.editor.validate_template();
                 new_model.template.sync_variables_with_template();
+                if content_changed {
+                    new_model.template.uses_automatic_template = false;
+                }
                 (new_model, Cmd::None)
             }
 

@@ -10,6 +10,7 @@ pub mod picker;
 pub mod variable;
 
 use anyhow::{Context, Result, anyhow, bail};
+use code2prompt_core::{session::Code2PromptSession, template::OutputFormat};
 pub use editor::EditorState;
 pub use picker::{ActiveList, PickerState};
 pub use variable::{VariableCategory, VariableInfo, VariableState};
@@ -39,6 +40,8 @@ pub struct TemplateState {
     pub focus: TemplateFocus,
     pub focus_mode: FocusMode,
     pub status_message: String,
+    /// Whether generation should let the selected output format choose its built-in template.
+    pub uses_automatic_template: bool,
 }
 
 impl Default for TemplateState {
@@ -50,6 +53,7 @@ impl Default for TemplateState {
             focus: TemplateFocus::Editor,
             focus_mode: FocusMode::Normal,
             status_message: String::new(),
+            uses_automatic_template: true,
         };
 
         // Initialize variable state with template variables
@@ -59,6 +63,37 @@ impl Default for TemplateState {
 }
 
 impl TemplateState {
+    /// Create template state that reflects the session passed to the TUI.
+    pub fn from_session(session: &Code2PromptSession) -> Self {
+        let uses_automatic_template = session.config.template_str.is_empty();
+        let editor = if uses_automatic_template {
+            EditorState::for_output_format(session.config.output_format)
+        } else {
+            EditorState::from_content(
+                session.config.template_str.clone(),
+                session.config.template_name.clone(),
+            )
+        };
+        let mut state = Self {
+            editor,
+            variables: VariableState::default(),
+            picker: PickerState::default(),
+            focus: TemplateFocus::Editor,
+            focus_mode: FocusMode::Normal,
+            status_message: String::new(),
+            uses_automatic_template,
+        };
+        state.sync_variables_with_template();
+        state
+    }
+
+    /// Reset the editor to the automatic template for the selected output format.
+    pub fn reset_to_automatic_template(&mut self, output_format: OutputFormat) {
+        self.editor = EditorState::for_output_format(output_format);
+        self.uses_automatic_template = true;
+        self.sync_variables_with_template();
+    }
+
     /// Create template state from model (for TUI integration)
     pub fn from_model(model: &crate::model::Model) -> Self {
         // Create a new state based on the model's template state
@@ -156,6 +191,7 @@ impl TemplateState {
         // Sync and validate
         self.editor.sync_content_from_textarea();
         self.editor.validate_template();
+        self.uses_automatic_template = false;
 
         Ok(template_name)
     }

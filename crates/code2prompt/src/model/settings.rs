@@ -91,7 +91,7 @@ impl SettingsState {
                 session.config.no_codeblock = !session.config.no_codeblock;
                 "No Codeblock"
             }
-            (SettingKey::OutputFormat, SettingAction::Cycle) => {
+            (SettingKey::OutputFormat, SettingAction::Toggle | SettingAction::Cycle) => {
                 session.config.output_format = match session.config.output_format {
                     OutputFormat::Markdown => OutputFormat::Json,
                     OutputFormat::Json => OutputFormat::Xml,
@@ -99,7 +99,7 @@ impl SettingsState {
                 };
                 "Output Format"
             }
-            (SettingKey::TokenFormat, SettingAction::Cycle) => {
+            (SettingKey::TokenFormat, SettingAction::Toggle | SettingAction::Cycle) => {
                 session.config.token_format = match session.config.token_format {
                     TokenFormat::Raw => TokenFormat::Format,
                     TokenFormat::Format => TokenFormat::Raw,
@@ -110,7 +110,7 @@ impl SettingsState {
                 session.config.full_directory_tree = !session.config.full_directory_tree;
                 "Full Directory Tree"
             }
-            (SettingKey::SortMethod, SettingAction::Cycle) => {
+            (SettingKey::SortMethod, SettingAction::Toggle | SettingAction::Cycle) => {
                 session.config.sort_method = Some(match session.config.sort_method {
                     Some(code2prompt_core::sort::FileSortMethod::NameAsc) => {
                         code2prompt_core::sort::FileSortMethod::NameDesc
@@ -127,7 +127,7 @@ impl SettingsState {
                 });
                 "Sort Method"
             }
-            (SettingKey::TokenizerType, SettingAction::Cycle) => {
+            (SettingKey::TokenizerType, SettingAction::Toggle | SettingAction::Cycle) => {
                 session.config.encoding = match session.config.encoding {
                     code2prompt_core::tokenizer::TokenizerType::Cl100kBase => {
                         code2prompt_core::tokenizer::TokenizerType::O200kBase
@@ -167,7 +167,6 @@ impl SettingsState {
                 session.set_deselected(!session.config.deselected);
                 "Deselected by Default"
             }
-            _ => "Unknown Setting",
         }
     }
 }
